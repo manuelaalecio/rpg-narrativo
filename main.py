@@ -1,7 +1,60 @@
+"""Composition root: manual dependency injection wiring all layers together.
+
+This is the ONLY place in the project where infrastructure/, application/,
+domain/, presentation/, and ui/ can all be imported together — it's the
+composition root that assembles the object graph before starting the app.
+"""
+
+import sys
+from pathlib import Path
+
+from PySide6.QtWidgets import QApplication
+
+from application.use_cases.look_at_room import LookAtRoomUseCase
+from application.use_cases.move_to_room import MoveToRoomUseCase
+from application.use_cases.pick_up_item import PickUpItemUseCase
+from domain.entities.player import Player
+from infrastructure.content_loader.json_content_repository import JsonContentRepository
+from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
+from presentation.state_machine.game_state import GameState
+from presentation.state_machine.game_state_machine import GameStateMachine
+from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
+from ui.screens.exploration_screen import ExplorationScreen
+from ui.screens.main_menu_screen import MainMenuScreen
+from ui.windows.main_window import MainWindow
+
+
 def main() -> None:
-    print("RPG Narrativo - projeto iniciado com sucesso")
-    # Futuramente: montar injeção de dependências manual (Ports → implementações)
-    # e iniciar a MainWindow do PySide6, conforme ADR-001.
+    data_path = Path(__file__).parent / "data"
+    content_repo = JsonContentRepository(data_path)
+    event_bus = InMemoryEventBus()
+
+    move_uc = MoveToRoomUseCase(content_repo, event_bus)
+    look_uc = LookAtRoomUseCase(content_repo)
+    pick_up_uc = PickUpItemUseCase(content_repo, event_bus)
+
+    game_map = content_repo.get_map()
+    first_room_id = game_map.room_ids[0] if game_map.room_ids else "room_01"
+    player = Player(id="player_01", name="Hero", current_room_id=first_room_id)
+
+    exploration_vm = ExplorationViewModel(player, move_uc, look_uc, pick_up_uc)
+
+    state_machine = GameStateMachine(initial_state=GameState.MAIN_MENU)
+
+    app = QApplication(sys.argv)
+
+    main_window = MainWindow(state_machine)
+
+    main_menu_screen = MainMenuScreen(state_machine)
+    exploration_screen = ExplorationScreen(exploration_vm)
+
+    main_window.register_screen(GameState.MAIN_MENU, main_menu_screen)
+    main_window.register_screen(GameState.EXPLORATION, exploration_screen)
+
+    main_window.show_initial_screen()
+    main_window.show()
+
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
