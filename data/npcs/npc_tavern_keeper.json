@@ -1,0 +1,6 @@
+{
+    "id": "npc_tavern_keeper",
+    "name": "Tavern Keeper",
+    "description": "A burly man with a thick beard, polishing glasses behind the bar.",
+    "dialogue_id": "dialogue_tavern_keeper"
+}

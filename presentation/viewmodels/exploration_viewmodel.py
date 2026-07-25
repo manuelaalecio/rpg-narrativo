@@ -13,7 +13,7 @@ class ExplorationViewModel(QObject):
     Never exposes domain entities (Room, Item, Player) directly.
     """
 
-    room_updated = Signal(str, str, list, list)
+    room_updated = Signal(str, str, list, list, list)
     log_message = Signal(str)
 
     def __init__(
@@ -33,6 +33,7 @@ class ExplorationViewModel(QObject):
         self._room_description = ""
         self._available_exits: list[str] = []
         self._room_items: list[str] = []
+        self._room_npc_ids: list[str] = []
 
     @property
     def room_name(self) -> str:
@@ -50,6 +51,10 @@ class ExplorationViewModel(QObject):
     def room_items(self) -> list[str]:
         return self._room_items
 
+    @property
+    def room_npc_ids(self) -> list[str]:
+        return self._room_npc_ids
+
     def look(self) -> None:
         """Look at the current room and update observable state."""
         result = self._look_uc.execute(self._player)
@@ -58,11 +63,13 @@ class ExplorationViewModel(QObject):
             self._room_description = result.data.get("description", "")
             self._available_exits = result.data.get("exits", [])
             self._room_items = result.data.get("item_ids", [])
+            self._room_npc_ids = result.data.get("npc_ids", [])
             self.room_updated.emit(
                 self._room_name,
                 self._room_description,
                 self._available_exits,
                 self._room_items,
+                self._room_npc_ids,
             )
 
     def move(self, direction: str) -> None:

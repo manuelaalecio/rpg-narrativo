@@ -10,14 +10,17 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
+from application.use_cases.choose_dialogue_option import ChooseDialogueOptionUseCase
 from application.use_cases.look_at_room import LookAtRoomUseCase
 from application.use_cases.move_to_room import MoveToRoomUseCase
 from application.use_cases.pick_up_item import PickUpItemUseCase
+from application.use_cases.start_dialogue import StartDialogueUseCase
 from domain.entities.player import Player
 from infrastructure.content_loader.json_content_repository import JsonContentRepository
 from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
 from presentation.state_machine.game_state import GameState
 from presentation.state_machine.game_state_machine import GameStateMachine
+from presentation.viewmodels.dialogue_viewmodel import DialogueViewModel
 from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
 from ui.screens.combat_screen import CombatScreen
 from ui.screens.dialogue_screen import DialogueScreen
@@ -37,12 +40,15 @@ def main() -> None:
     move_uc = MoveToRoomUseCase(content_repo, event_bus)
     look_uc = LookAtRoomUseCase(content_repo)
     pick_up_uc = PickUpItemUseCase(content_repo, event_bus)
+    start_dialogue_uc = StartDialogueUseCase(content_repo, event_bus)
+    choose_option_uc = ChooseDialogueOptionUseCase(event_bus)
 
     game_map = content_repo.get_map()
     first_room_id = game_map.room_ids[0] if game_map.room_ids else "room_01"
     player = Player(id="player_01", name="Hero", current_room_id=first_room_id)
 
     exploration_vm = ExplorationViewModel(player, move_uc, look_uc, pick_up_uc)
+    dialogue_vm = DialogueViewModel(player, start_dialogue_uc, choose_option_uc)
 
     state_machine = GameStateMachine(initial_state=GameState.MAIN_MENU)
 
@@ -54,10 +60,17 @@ def main() -> None:
     main_menu_screen = MainMenuScreen(state_machine)
     loading_screen = LoadingScreen()
     exploration_screen = ExplorationScreen(exploration_vm, state_machine)
-    dialogue_screen = DialogueScreen(state_machine)
+    dialogue_screen = DialogueScreen(dialogue_vm, state_machine)
     combat_screen = CombatScreen(state_machine)
     inventory_screen = InventoryScreen(state_machine)
     pause_screen = PauseScreen(state_machine)
+
+    # Wire NPC interaction: when player clicks "Talk to NPC", start dialogue and transition
+    def on_talk_to_npc(npc_id: str) -> None:
+        dialogue_vm.start_dialogue(npc_id)
+        state_machine.transition_to(GameState.DIALOGUE)
+
+    exploration_screen.talk_to_npc_requested.connect(on_talk_to_npc)
 
     # Register all screens with the MainWindow
     main_window.register_screen(GameState.MAIN_MENU, main_menu_screen)

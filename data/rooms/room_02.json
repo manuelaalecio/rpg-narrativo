@@ -6,5 +6,5 @@
         "south": "room_01"
     },
     "item_ids": ["item_health_potion"],
-    "npc_ids": []
+    "npc_ids": ["npc_tavern_keeper"]
 }

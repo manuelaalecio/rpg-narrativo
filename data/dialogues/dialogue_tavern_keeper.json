@@ -1,0 +1,48 @@
+{
+    "id": "dialogue_tavern_keeper",
+    "start_node_id": "node_01",
+    "nodes": {
+        "node_01": {
+            "id": "node_01",
+            "npc_text": "Welcome to the Old Tavern, traveler. What brings you here?",
+            "options": [
+                {
+                    "text": "Just passing through. Nice place you have here.",
+                    "next_node_id": "node_02"
+                },
+                {
+                    "text": "I found this old key. Do you know anything about it?",
+                    "next_node_id": "node_03",
+                    "condition": {
+                        "condition_type": "requires_item",
+                        "value": "item_old_key"
+                    }
+                },
+                {
+                    "text": "Goodbye.",
+                    "next_node_id": null
+                }
+            ]
+        },
+        "node_02": {
+            "id": "node_02",
+            "npc_text": "Aye, it's been standing for generations. Feel free to look around.",
+            "options": [
+                {
+                    "text": "Thanks.",
+                    "next_node_id": null
+                }
+            ]
+        },
+        "node_03": {
+            "id": "node_03",
+            "npc_text": "That crest... I haven't seen it in years. That key opens the cellar door behind the bar. Be careful down there.",
+            "options": [
+                {
+                    "text": "I'll keep that in mind. Thank you!",
+                    "next_node_id": null
+                }
+            ]
+        }
+    }
+}

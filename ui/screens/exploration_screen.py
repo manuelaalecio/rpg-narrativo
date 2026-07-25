@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -17,6 +17,8 @@ from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
 
 class ExplorationScreen(QWidget):
     """Screen for exploring rooms, viewing exits, and picking up items."""
+
+    talk_to_npc_requested = Signal(str)
 
     def __init__(self, view_model: ExplorationViewModel, state_machine: GameStateMachine) -> None:
         super().__init__()
@@ -74,10 +76,6 @@ class ExplorationScreen(QWidget):
 
         nav_layout = QHBoxLayout()
 
-        dialogue_btn = QPushButton("Diálogo (placeholder)")
-        dialogue_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.DIALOGUE))
-        nav_layout.addWidget(dialogue_btn)
-
         combat_btn = QPushButton("Combate (placeholder)")
         combat_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.COMBAT))
         nav_layout.addWidget(combat_btn)
@@ -92,13 +90,23 @@ class ExplorationScreen(QWidget):
 
         main_layout.addLayout(nav_layout)
 
+        npcs_label = QLabel("NPCs:")
+        npcs_label.setStyleSheet("font-weight: bold;")
+        main_layout.addWidget(npcs_label)
+        self._npcs_container = QWidget()
+        self._npcs_layout = QVBoxLayout(self._npcs_container)
+        self._npcs_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self._npcs_container)
+
         self.setLayout(main_layout)
 
     def _connect_signals(self) -> None:
         self._view_model.room_updated.connect(self._on_room_updated)
         self._view_model.log_message.connect(self._on_log_message)
 
-    def _on_room_updated(self, name: str, description: str, exits: list[str], items: list[str]) -> None:
+    def _on_room_updated(
+        self, name: str, description: str, exits: list[str], items: list[str], npc_ids: list[str]
+    ) -> None:
         self._room_name_label.setText(name)
         self._description_browser.setPlainText(description)
 
@@ -114,6 +122,12 @@ class ExplorationScreen(QWidget):
             list_item.setData(Qt.UserRole, item_id)
             self._items_list.addItem(list_item)
 
+        self._clear_npcs()
+        for npc_id in npc_ids:
+            button = QPushButton(f"Falar com {npc_id}")
+            button.clicked.connect(lambda checked, nid=npc_id: self._on_talk_to_npc(nid))
+            self._npcs_layout.addWidget(button)
+
     def _on_log_message(self, message: str) -> None:
         self._log_browser.append(f"> {message}")
 
@@ -128,5 +142,14 @@ class ExplorationScreen(QWidget):
     def _clear_exits(self) -> None:
         while self._exits_layout.count():
             child = self._exits_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def _on_talk_to_npc(self, npc_id: str) -> None:
+        self.talk_to_npc_requested.emit(npc_id)
+
+    def _clear_npcs(self) -> None:
+        while self._npcs_layout.count():
+            child = self._npcs_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()

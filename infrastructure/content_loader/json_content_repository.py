@@ -25,13 +25,54 @@ Item (data/items/<item_id>.json):
 
 item_type must be one of: "weapon", "consumable", "key", "misc"
 (must match ItemType enum values in domain/value_objects/item_type.py)
+
+NPC (data/npcs/<npc_id>.json):
+{
+    "id": "npc_tavern_keeper",
+    "name": "Tavern Keeper",
+    "description": "A burly man behind the bar.",
+    "dialogue_id": "dialogue_tavern_keeper"
+}
+
+Dialogue (data/dialogues/<dialogue_id>.json):
+{
+    "id": "dialogue_tavern_keeper",
+    "start_node_id": "node_01",
+    "nodes": {
+        "node_01": {
+            "id": "node_01",
+            "npc_text": "Welcome to the tavern!",
+            "options": [
+                {"text": "Hello!", "next_node_id": "node_02"},
+                {"text": "Show me the key.", "next_node_id": "node_03",
+                 "condition": {"condition_type": "requires_item", "value": "item_old_key"}},
+                {"text": "Goodbye.", "next_node_id": null}
+            ]
+        },
+        "node_02": {
+            "id": "node_02",
+            "npc_text": "Nice to meet you.",
+            "options": [{"text": "Goodbye.", "next_node_id": null}]
+        },
+        "node_03": {
+            "id": "node_03",
+            "npc_text": "Ah, you have the key! Here's a secret...",
+            "options": [{"text": "Thanks!", "next_node_id": null}]
+        }
+    }
+}
+
+Conditions are structured data, never executable code.
+Supported condition_type values: "requires_item"
 """
 
 import json
 from pathlib import Path
 
+from domain.entities.dialogue import Condition, Dialogue, DialogueNode, DialogueOption
 from domain.entities.item import Item
 from domain.entities.map import GameMap
+from domain.entities.npc import NPC
 from domain.entities.room import Room
 from domain.value_objects.item_type import ItemType
 from infrastructure.exceptions import ContentLoadError
@@ -49,12 +90,16 @@ class JsonContentRepository:
         self._data_path = data_path
         self._map = GameMap()
         self._items: dict[str, Item] = {}
+        self._npcs: dict[str, NPC] = {}
+        self._dialogues: dict[str, Dialogue] = {}
         self._load_all()
 
     def _load_all(self) -> None:
-        """Load all rooms and items from JSON files into memory."""
+        """Load all rooms, items, NPCs, and dialogues from JSON files into memory."""
         self._load_rooms()
         self._load_items()
+        self._load_npcs()
+        self._load_dialogues()
 
     def _load_rooms(self) -> None:
         rooms_dir = self._data_path / "rooms"
@@ -124,3 +169,73 @@ class JsonContentRepository:
     def get_item(self, item_id: str) -> Item:
         """Return the item definition for the given id."""
         return self._items[item_id]
+
+    def get_npc(self, npc_id: str) -> NPC:
+        """Return the NPC definition for the given id."""
+        return self._npcs[npc_id]
+
+    def get_dialogue(self, dialogue_id: str) -> Dialogue:
+        """Return the dialogue graph for the given id."""
+        return self._dialogues[dialogue_id]
+
+    def _load_npcs(self) -> None:
+        npcs_dir = self._data_path / "npcs"
+        if not npcs_dir.exists():
+            return
+        for json_file in sorted(npcs_dir.glob("*.json")):
+            npc = self._parse_npc(json_file)
+            self._npcs[npc.id] = npc
+
+    def _load_dialogues(self) -> None:
+        dialogues_dir = self._data_path / "dialogues"
+        if not dialogues_dir.exists():
+            return
+        for json_file in sorted(dialogues_dir.glob("*.json")):
+            dialogue = self._parse_dialogue(json_file)
+            self._dialogues[dialogue.id] = dialogue
+
+    def _parse_npc(self, file_path: Path) -> NPC:
+        data = self._read_json(file_path)
+        try:
+            return NPC(
+                id=data["id"],
+                name=data["name"],
+                description=data["description"],
+                dialogue_id=data.get("dialogue_id"),
+            )
+        except KeyError as e:
+            raise ContentLoadError(str(file_path), f"Missing required field: {e}") from e
+
+    def _parse_dialogue(self, file_path: Path) -> Dialogue:
+        data = self._read_json(file_path)
+        try:
+            nodes: dict[str, DialogueNode] = {}
+            for node_id, node_data in data["nodes"].items():
+                options = []
+                for opt_data in node_data.get("options", []):
+                    condition = None
+                    if "condition" in opt_data:
+                        cond_data = opt_data["condition"]
+                        condition = Condition(
+                            condition_type=cond_data["condition_type"],
+                            value=cond_data["value"],
+                        )
+                    options.append(
+                        DialogueOption(
+                            text=opt_data["text"],
+                            next_node_id=opt_data.get("next_node_id"),
+                            condition=condition,
+                        )
+                    )
+                nodes[node_id] = DialogueNode(
+                    id=node_data["id"],
+                    npc_text=node_data["npc_text"],
+                    options=options,
+                )
+            return Dialogue(
+                id=data["id"],
+                start_node_id=data["start_node_id"],
+                nodes=nodes,
+            )
+        except KeyError as e:
+            raise ContentLoadError(str(file_path), f"Missing required field: {e}") from e
