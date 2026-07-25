@@ -19,8 +19,13 @@ from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
 from presentation.state_machine.game_state import GameState
 from presentation.state_machine.game_state_machine import GameStateMachine
 from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
+from ui.screens.combat_screen import CombatScreen
+from ui.screens.dialogue_screen import DialogueScreen
 from ui.screens.exploration_screen import ExplorationScreen
+from ui.screens.inventory_screen import InventoryScreen
+from ui.screens.loading_screen import LoadingScreen
 from ui.screens.main_menu_screen import MainMenuScreen
+from ui.screens.pause_screen import PauseScreen
 from ui.windows.main_window import MainWindow
 
 
@@ -45,11 +50,23 @@ def main() -> None:
 
     main_window = MainWindow(state_machine)
 
+    # Create all screens
     main_menu_screen = MainMenuScreen(state_machine)
-    exploration_screen = ExplorationScreen(exploration_vm)
+    loading_screen = LoadingScreen()
+    exploration_screen = ExplorationScreen(exploration_vm, state_machine)
+    dialogue_screen = DialogueScreen(state_machine)
+    combat_screen = CombatScreen(state_machine)
+    inventory_screen = InventoryScreen(state_machine)
+    pause_screen = PauseScreen(state_machine)
 
+    # Register all screens with the MainWindow
     main_window.register_screen(GameState.MAIN_MENU, main_menu_screen)
+    main_window.register_screen(GameState.LOADING, loading_screen)
     main_window.register_screen(GameState.EXPLORATION, exploration_screen)
+    main_window.register_screen(GameState.DIALOGUE, dialogue_screen)
+    main_window.register_screen(GameState.COMBAT, combat_screen)
+    main_window.register_screen(GameState.INVENTORY, inventory_screen)
+    main_window.register_screen(GameState.PAUSED, pause_screen)
 
     main_window.show_initial_screen()
     main_window.show()

@@ -1,3 +1,20 @@
+"""
+Game State Machine - Controls screen transitions in the RPG.
+
+Transition Table (from -> allowed targets):
+--------------------------------------------
+MAIN_MENU    -> LOADING, EXPLORATION
+LOADING      -> EXPLORATION, MAIN_MENU
+EXPLORATION  -> DIALOGUE, COMBAT, INVENTORY, PAUSED, MAIN_MENU
+DIALOGUE     -> EXPLORATION, COMBAT
+COMBAT       -> EXPLORATION, INVENTORY
+INVENTORY    -> EXPLORATION, COMBAT
+PAUSED       -> EXPLORATION, MAIN_MENU
+
+Invalid transitions return False (no exception raised) to allow
+UI code to gracefully handle user actions without try/except blocks.
+"""
+
 from collections.abc import Callable
 
 from presentation.state_machine.game_state import GameState

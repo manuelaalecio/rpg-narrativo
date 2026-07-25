@@ -10,15 +10,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from presentation.state_machine.game_state import GameState
+from presentation.state_machine.game_state_machine import GameStateMachine
 from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
 
 
 class ExplorationScreen(QWidget):
     """Screen for exploring rooms, viewing exits, and picking up items."""
 
-    def __init__(self, view_model: ExplorationViewModel) -> None:
+    def __init__(self, view_model: ExplorationViewModel, state_machine: GameStateMachine) -> None:
         super().__init__()
         self._view_model = view_model
+        self._state_machine = state_machine
 
         self._setup_ui()
         self._connect_signals()
@@ -62,6 +65,32 @@ class ExplorationScreen(QWidget):
         self._log_browser = QTextBrowser()
         self._log_browser.setMaximumHeight(150)
         main_layout.addWidget(self._log_browser)
+
+        # Temporary navigation buttons for testing state transitions
+        # These will be replaced by real triggers in future steps
+        nav_label = QLabel("Navegação (temporário):")
+        nav_label.setStyleSheet("font-weight: bold; color: #999;")
+        main_layout.addWidget(nav_label)
+
+        nav_layout = QHBoxLayout()
+
+        dialogue_btn = QPushButton("Diálogo (placeholder)")
+        dialogue_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.DIALOGUE))
+        nav_layout.addWidget(dialogue_btn)
+
+        combat_btn = QPushButton("Combate (placeholder)")
+        combat_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.COMBAT))
+        nav_layout.addWidget(combat_btn)
+
+        inventory_btn = QPushButton("Inventário (placeholder)")
+        inventory_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.INVENTORY))
+        nav_layout.addWidget(inventory_btn)
+
+        pause_btn = QPushButton("Pausar (placeholder)")
+        pause_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.PAUSED))
+        nav_layout.addWidget(pause_btn)
+
+        main_layout.addLayout(nav_layout)
 
         self.setLayout(main_layout)
 
