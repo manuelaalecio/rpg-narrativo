@@ -1,0 +1,11 @@
+{
+    "id": "room_01",
+    "name": "Town Square",
+    "description": "A cobblestone square at the heart of a quiet town. A faded fountain trickles in the center.",
+    "exits": {
+        "north": "room_02",
+        "east": "room_03"
+    },
+    "item_ids": ["item_old_key"],
+    "npc_ids": []
+}

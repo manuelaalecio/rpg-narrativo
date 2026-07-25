@@ -1,0 +1,10 @@
+{
+    "id": "room_03",
+    "name": "Market Alley",
+    "description": "A narrow alley lined with abandoned market stalls. Crates are stacked against the walls.",
+    "exits": {
+        "west": "room_01"
+    },
+    "item_ids": ["item_rusty_sword"],
+    "npc_ids": []
+}

@@ -1,0 +1,8 @@
+{
+    "id": "item_rusty_sword",
+    "name": "Rusty Sword",
+    "description": "A dull sword with spots of rust. Still sharp enough to cut.",
+    "item_type": "weapon",
+    "usable": false,
+    "stackable": false
+}

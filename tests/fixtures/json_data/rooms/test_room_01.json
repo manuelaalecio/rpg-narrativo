@@ -1,0 +1,8 @@
+{
+    "id": "test_room_01",
+    "name": "Test Hall",
+    "description": "A test hall.",
+    "exits": {"north": "test_room_02"},
+    "item_ids": ["test_item_01"],
+    "npc_ids": []
+}

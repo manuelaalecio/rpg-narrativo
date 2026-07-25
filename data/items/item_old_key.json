@@ -1,0 +1,8 @@
+{
+    "id": "item_old_key",
+    "name": "Old Key",
+    "description": "A tarnished brass key with an unfamiliar crest.",
+    "item_type": "key",
+    "usable": true,
+    "stackable": false
+}

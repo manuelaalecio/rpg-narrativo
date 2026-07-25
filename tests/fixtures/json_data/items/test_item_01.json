@@ -1,0 +1,8 @@
+{
+    "id": "test_item_01",
+    "name": "Test Sword",
+    "description": "A test sword.",
+    "item_type": "weapon",
+    "usable": false,
+    "stackable": false
+}

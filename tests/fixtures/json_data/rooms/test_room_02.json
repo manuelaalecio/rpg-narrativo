@@ -1,0 +1,8 @@
+{
+    "id": "test_room_02",
+    "name": "Test Garden",
+    "description": "A test garden.",
+    "exits": {"south": "test_room_01"},
+    "item_ids": [],
+    "npc_ids": []
+}

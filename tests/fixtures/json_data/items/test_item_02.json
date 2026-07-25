@@ -1,0 +1,8 @@
+{
+    "id": "test_item_02",
+    "name": "Test Potion",
+    "description": "A test potion.",
+    "item_type": "consumable",
+    "usable": true,
+    "stackable": true
+}

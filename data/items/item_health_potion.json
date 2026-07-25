@@ -1,0 +1,8 @@
+{
+    "id": "item_health_potion",
+    "name": "Health Potion",
+    "description": "A small glass vial filled with a warm red liquid.",
+    "item_type": "consumable",
+    "usable": true,
+    "stackable": true
+}

@@ -1,0 +1,10 @@
+{
+    "id": "room_02",
+    "name": "Old Tavern",
+    "description": "A dimly lit tavern with wooden tables and the smell of stale ale.",
+    "exits": {
+        "south": "room_01"
+    },
+    "item_ids": ["item_health_potion"],
+    "npc_ids": []
+}
