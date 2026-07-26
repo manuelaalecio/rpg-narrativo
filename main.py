@@ -11,19 +11,23 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from application.use_cases.choose_dialogue_option import ChooseDialogueOptionUseCase
+from application.use_cases.load_game import LoadGameUseCase
 from application.use_cases.look_at_room import LookAtRoomUseCase
 from application.use_cases.move_to_room import MoveToRoomUseCase
 from application.use_cases.pick_up_item import PickUpItemUseCase
+from application.use_cases.save_game import SaveGameUseCase
 from application.use_cases.start_dialogue import StartDialogueUseCase
 from application.use_cases.use_item import UseItemUseCase
 from domain.entities.player import Player
 from infrastructure.content_loader.json_content_repository import JsonContentRepository
 from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
+from infrastructure.persistence.json_save_game_repository import JsonSaveGameRepository
 from presentation.state_machine.game_state import GameState
 from presentation.state_machine.game_state_machine import GameStateMachine
 from presentation.viewmodels.dialogue_viewmodel import DialogueViewModel
 from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
 from presentation.viewmodels.inventory_viewmodel import InventoryViewModel
+from presentation.viewmodels.menu_viewmodel import MenuViewModel
 from ui.screens.combat_screen import CombatScreen
 from ui.screens.dialogue_screen import DialogueScreen
 from ui.screens.exploration_screen import ExplorationScreen
@@ -36,7 +40,10 @@ from ui.windows.main_window import MainWindow
 
 def main() -> None:
     data_path = Path(__file__).parent / "data"
+    save_path = Path(__file__).parent / "save"
+
     content_repo = JsonContentRepository(data_path)
+    save_repo = JsonSaveGameRepository(save_path)
     event_bus = InMemoryEventBus()
 
     move_uc = MoveToRoomUseCase(content_repo, event_bus)
@@ -45,6 +52,8 @@ def main() -> None:
     start_dialogue_uc = StartDialogueUseCase(content_repo, event_bus)
     choose_option_uc = ChooseDialogueOptionUseCase(event_bus)
     use_item_uc = UseItemUseCase(content_repo, event_bus)
+    save_game_uc = SaveGameUseCase(save_repo, event_bus)
+    load_game_uc = LoadGameUseCase(save_repo, event_bus)
 
     game_map = content_repo.get_map()
     first_room_id = game_map.room_ids[0] if game_map.room_ids else "room_01"
@@ -53,6 +62,7 @@ def main() -> None:
     exploration_vm = ExplorationViewModel(player, move_uc, look_uc, pick_up_uc)
     dialogue_vm = DialogueViewModel(player, start_dialogue_uc, choose_option_uc)
     inventory_vm = InventoryViewModel(player, use_item_uc, content_repo)
+    menu_vm = MenuViewModel(save_repo, save_game_uc, load_game_uc)
 
     state_machine = GameStateMachine(initial_state=GameState.MAIN_MENU)
 
@@ -69,12 +79,47 @@ def main() -> None:
     inventory_screen = InventoryScreen(inventory_vm, state_machine)
     pause_screen = PauseScreen(state_machine)
 
-    # Wire NPC interaction: when player clicks "Talk to NPC", start dialogue and transition
+    # Wire NPC interaction
     def on_talk_to_npc(npc_id: str) -> None:
         dialogue_vm.start_dialogue(npc_id)
         state_machine.transition_to(GameState.DIALOGUE)
 
     exploration_screen.talk_to_npc_requested.connect(on_talk_to_npc)
+
+    # Wire save/load interactions
+    def on_save_game() -> None:
+        menu_vm.save_game(player, "autosave")
+        state_machine.transition_to(GameState.EXPLORATION)
+
+    pause_screen.save_game_requested.connect(on_save_game)
+
+    def on_load_game(slot: str) -> None:
+        menu_vm.load_game(slot)
+
+    main_menu_screen.load_game_requested.connect(on_load_game)
+
+    def on_game_loaded(loaded_player: Player) -> None:
+        nonlocal player
+        player = loaded_player
+        # Update all ViewModels with the new player
+        exploration_vm._player = player
+        dialogue_vm._player = player
+        inventory_vm._player = player
+        exploration_vm.look()
+        state_machine.transition_to(GameState.EXPLORATION)
+
+    menu_vm.game_loaded.connect(on_game_loaded)
+
+    # Refresh saves list when showing main menu
+    def on_state_change(new_state: GameState) -> None:
+        if new_state == GameState.MAIN_MENU:
+            menu_vm.refresh_saves_list()
+
+    state_machine.on_state_change(on_state_change)
+    menu_vm.refresh_saves_list()
+
+    # Connect MenuViewModel signals to UI
+    menu_vm.saves_list_updated.connect(main_menu_screen.update_saves_list)
 
     # Register all screens with the MainWindow
     main_window.register_screen(GameState.MAIN_MENU, main_menu_screen)
