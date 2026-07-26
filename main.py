@@ -15,6 +15,7 @@ from application.use_cases.look_at_room import LookAtRoomUseCase
 from application.use_cases.move_to_room import MoveToRoomUseCase
 from application.use_cases.pick_up_item import PickUpItemUseCase
 from application.use_cases.start_dialogue import StartDialogueUseCase
+from application.use_cases.use_item import UseItemUseCase
 from domain.entities.player import Player
 from infrastructure.content_loader.json_content_repository import JsonContentRepository
 from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
@@ -22,6 +23,7 @@ from presentation.state_machine.game_state import GameState
 from presentation.state_machine.game_state_machine import GameStateMachine
 from presentation.viewmodels.dialogue_viewmodel import DialogueViewModel
 from presentation.viewmodels.exploration_viewmodel import ExplorationViewModel
+from presentation.viewmodels.inventory_viewmodel import InventoryViewModel
 from ui.screens.combat_screen import CombatScreen
 from ui.screens.dialogue_screen import DialogueScreen
 from ui.screens.exploration_screen import ExplorationScreen
@@ -42,6 +44,7 @@ def main() -> None:
     pick_up_uc = PickUpItemUseCase(content_repo, event_bus)
     start_dialogue_uc = StartDialogueUseCase(content_repo, event_bus)
     choose_option_uc = ChooseDialogueOptionUseCase(event_bus)
+    use_item_uc = UseItemUseCase(content_repo, event_bus)
 
     game_map = content_repo.get_map()
     first_room_id = game_map.room_ids[0] if game_map.room_ids else "room_01"
@@ -49,6 +52,7 @@ def main() -> None:
 
     exploration_vm = ExplorationViewModel(player, move_uc, look_uc, pick_up_uc)
     dialogue_vm = DialogueViewModel(player, start_dialogue_uc, choose_option_uc)
+    inventory_vm = InventoryViewModel(player, use_item_uc, content_repo)
 
     state_machine = GameStateMachine(initial_state=GameState.MAIN_MENU)
 
@@ -62,7 +66,7 @@ def main() -> None:
     exploration_screen = ExplorationScreen(exploration_vm, state_machine)
     dialogue_screen = DialogueScreen(dialogue_vm, state_machine)
     combat_screen = CombatScreen(state_machine)
-    inventory_screen = InventoryScreen(state_machine)
+    inventory_screen = InventoryScreen(inventory_vm, state_machine)
     pause_screen = PauseScreen(state_machine)
 
     # Wire NPC interaction: when player clicks "Talk to NPC", start dialogue and transition

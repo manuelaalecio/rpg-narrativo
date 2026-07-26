@@ -4,5 +4,9 @@
     "description": "A small glass vial filled with a warm red liquid.",
     "item_type": "consumable",
     "usable": true,
-    "stackable": true
+    "stackable": true,
+    "effect": {
+        "effect_type": "heal",
+        "value": 30
+    }
 }

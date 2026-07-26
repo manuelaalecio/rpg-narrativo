@@ -70,7 +70,7 @@ class ExplorationScreen(QWidget):
 
         # Temporary navigation buttons for testing state transitions
         # These will be replaced by real triggers in future steps
-        nav_label = QLabel("Navegação (temporário):")
+        nav_label = QLabel("Ações:")
         nav_label.setStyleSheet("font-weight: bold; color: #999;")
         main_layout.addWidget(nav_label)
 
@@ -80,7 +80,7 @@ class ExplorationScreen(QWidget):
         combat_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.COMBAT))
         nav_layout.addWidget(combat_btn)
 
-        inventory_btn = QPushButton("Inventário (placeholder)")
+        inventory_btn = QPushButton("Inventário")
         inventory_btn.clicked.connect(lambda: self._state_machine.transition_to(GameState.INVENTORY))
         nav_layout.addWidget(inventory_btn)
 

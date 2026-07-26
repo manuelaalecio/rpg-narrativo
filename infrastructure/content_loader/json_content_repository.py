@@ -20,11 +20,18 @@ Item (data/items/<item_id>.json):
     "description": "A sturdy iron sword.",
     "item_type": "weapon",
     "usable": false,
-    "stackable": false
+    "stackable": false,
+    "effect": null
+}
+
+Usable items may include an "effect" field:
+{
+    "effect": {"effect_type": "heal", "value": 30}
 }
 
 item_type must be one of: "weapon", "consumable", "key", "misc"
-(must match ItemType enum values in domain/value_objects/item_type.py)
+effect_type must be one of: "heal"
+(must match enum values in domain/value_objects/)
 
 NPC (data/npcs/<npc_id>.json):
 {
@@ -74,6 +81,7 @@ from domain.entities.item import Item
 from domain.entities.map import GameMap
 from domain.entities.npc import NPC
 from domain.entities.room import Room
+from domain.value_objects.item_effect import EffectType, ItemEffect
 from domain.value_objects.item_type import ItemType
 from infrastructure.exceptions import ContentLoadError
 
@@ -142,6 +150,18 @@ class JsonContentRepository:
                     str(file_path),
                     f"Invalid item_type '{item_type_str}'. Must be one of: {[t.value for t in ItemType]}",
                 )
+            effect = None
+            if "effect" in data:
+                effect_data = data["effect"]
+                try:
+                    effect_type = EffectType(effect_data["effect_type"])
+                except ValueError:
+                    raise ContentLoadError(
+                        str(file_path),
+                        f"Invalid effect_type '{effect_data['effect_type']}'. "
+                        f"Must be one of: {[t.value for t in EffectType]}",
+                    )
+                effect = ItemEffect(effect_type=effect_type, value=effect_data["value"])
             return Item(
                 id=data["id"],
                 name=data["name"],
@@ -149,6 +169,7 @@ class JsonContentRepository:
                 item_type=item_type,
                 usable=data.get("usable", False),
                 stackable=data.get("stackable", False),
+                effect=effect,
             )
         except KeyError as e:
             raise ContentLoadError(str(file_path), f"Missing required field: {e}") from e

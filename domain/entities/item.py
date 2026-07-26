@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from domain.value_objects.item_effect import ItemEffect
 from domain.value_objects.item_type import ItemType
 
 
@@ -13,3 +14,4 @@ class Item:
     item_type: ItemType
     usable: bool = False
     stackable: bool = False
+    effect: ItemEffect | None = None

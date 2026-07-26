@@ -48,3 +48,8 @@ class Inventory:
     def get_quantity(self, item_id: str) -> int:
         """Return the quantity of an item, or 0 if not present."""
         return self._items.get(item_id, 0)
+
+    @property
+    def item_ids(self) -> list[str]:
+        """Return all item ids currently in the inventory."""
+        return list(self._items.keys())

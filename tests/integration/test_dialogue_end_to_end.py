@@ -41,9 +41,7 @@ class TestDialogueEndToEnd:
         assert "Goodbye." in option_texts
         assert "I found this old key. Do you know anything about it?" not in option_texts
 
-        goodbye_original_idx = next(
-            orig_idx for orig_idx, opt in available if opt.text == "Goodbye."
-        )
+        goodbye_original_idx = next(orig_idx for orig_idx, opt in available if opt.text == "Goodbye.")
         result = choose_uc.execute(dialogue, goodbye_original_idx, player, "npc_tavern_keeper")
         assert result.success is True
         assert result.data is not None
@@ -80,9 +78,7 @@ class TestDialogueEndToEnd:
         option_texts = [opt.text for _, opt in available]
         assert "I found this old key. Do you know anything about it?" in option_texts
 
-        key_original_idx = next(
-            orig_idx for orig_idx, opt in available if "key" in opt.text.lower()
-        )
+        key_original_idx = next(orig_idx for orig_idx, opt in available if "key" in opt.text.lower())
         result = choose_uc.execute(dialogue, key_original_idx, player, "npc_tavern_keeper")
         assert result.success is True
         assert result.data is not None
