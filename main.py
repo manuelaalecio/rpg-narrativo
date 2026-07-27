@@ -10,7 +10,10 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QApplication
 
+from application.use_cases.accept_quest import AcceptQuestUseCase
+from application.use_cases.check_quest_progress import CheckQuestProgressUseCase
 from application.use_cases.choose_dialogue_option import ChooseDialogueOptionUseCase
+from application.use_cases.complete_quest import CompleteQuestUseCase
 from application.use_cases.load_game import LoadGameUseCase
 from application.use_cases.look_at_room import LookAtRoomUseCase
 from application.use_cases.move_to_room import MoveToRoomUseCase
@@ -21,6 +24,7 @@ from application.use_cases.use_item import UseItemUseCase
 from domain.entities.player import Player
 from infrastructure.content_loader.json_content_repository import JsonContentRepository
 from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
+from infrastructure.persistence.in_memory_quest_repository import InMemoryQuestRepository
 from infrastructure.persistence.json_save_game_repository import JsonSaveGameRepository
 from presentation.state_machine.game_state import GameState
 from presentation.state_machine.game_state_machine import GameStateMachine
@@ -44,6 +48,7 @@ def main() -> None:
 
     content_repo = JsonContentRepository(data_path)
     save_repo = JsonSaveGameRepository(save_path)
+    quest_repo = InMemoryQuestRepository()
     event_bus = InMemoryEventBus()
 
     move_uc = MoveToRoomUseCase(content_repo, event_bus)
@@ -52,8 +57,12 @@ def main() -> None:
     start_dialogue_uc = StartDialogueUseCase(content_repo, event_bus)
     choose_option_uc = ChooseDialogueOptionUseCase(event_bus)
     use_item_uc = UseItemUseCase(content_repo, event_bus)
-    save_game_uc = SaveGameUseCase(save_repo, event_bus)
-    load_game_uc = LoadGameUseCase(save_repo, event_bus)
+    # Quest use cases (will be wired to UI in Phase 2)
+    _accept_quest_uc = AcceptQuestUseCase(content_repo, quest_repo, event_bus)
+    _complete_quest_uc = CompleteQuestUseCase(content_repo, quest_repo, event_bus)
+    _check_quest_progress_uc = CheckQuestProgressUseCase(content_repo, quest_repo)
+    save_game_uc = SaveGameUseCase(save_repo, quest_repo, event_bus)
+    load_game_uc = LoadGameUseCase(save_repo, quest_repo, event_bus)
 
     game_map = content_repo.get_map()
     first_room_id = game_map.room_ids[0] if game_map.room_ids else "room_01"

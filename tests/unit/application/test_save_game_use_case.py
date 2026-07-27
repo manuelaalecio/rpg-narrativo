@@ -1,20 +1,20 @@
 """Unit tests for SaveGameUseCase."""
 
-from datetime import datetime
-
 from application.use_cases.save_game import SaveGameUseCase
 from domain.entities.inventory import Inventory
 from domain.entities.player import Player
 from domain.events.game_saved import GameSaved
 from tests.fixtures.fake_event_bus import FakeEventBus
+from tests.fixtures.fake_quest_repository import FakeQuestRepository
 from tests.fixtures.fake_save_game_repository import FakeSaveGameRepository
 
 
 class TestSaveGameUseCase:
     def test_save_success(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = SaveGameUseCase(repo, event_bus)
+        use_case = SaveGameUseCase(repo, quest_repo, event_bus)
 
         inventory = Inventory()
         inventory.add_item("item_sword", 1)
@@ -53,8 +53,9 @@ class TestSaveGameUseCase:
 
     def test_save_with_auto_name(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = SaveGameUseCase(repo, event_bus)
+        use_case = SaveGameUseCase(repo, quest_repo, event_bus)
 
         player = Player(
             id="player_01",
@@ -70,8 +71,9 @@ class TestSaveGameUseCase:
 
     def test_save_empty_inventory(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = SaveGameUseCase(repo, event_bus)
+        use_case = SaveGameUseCase(repo, quest_repo, event_bus)
 
         player = Player(
             id="player_01",

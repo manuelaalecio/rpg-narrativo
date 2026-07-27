@@ -12,6 +12,7 @@ from application.use_cases.use_item import UseItemUseCase
 from domain.entities.player import Player
 from infrastructure.content_loader.json_content_repository import JsonContentRepository
 from infrastructure.event_bus.in_memory_event_bus import InMemoryEventBus
+from infrastructure.persistence.in_memory_quest_repository import InMemoryQuestRepository
 from infrastructure.persistence.json_save_game_repository import JsonSaveGameRepository
 
 
@@ -29,13 +30,14 @@ class TestSaveLoadEndToEnd:
         data_path = Path(__file__).parent.parent.parent / "data"
         content_repo = JsonContentRepository(data_path)
         save_repo = JsonSaveGameRepository(temp_save_dir)
+        quest_repo = InMemoryQuestRepository()
         event_bus = InMemoryEventBus()
 
         move_uc = MoveToRoomUseCase(content_repo, event_bus)
         pick_up_uc = PickUpItemUseCase(content_repo, event_bus)
         use_item_uc = UseItemUseCase(content_repo, event_bus)
-        save_uc = SaveGameUseCase(save_repo, event_bus)
-        load_uc = LoadGameUseCase(save_repo, event_bus)
+        save_uc = SaveGameUseCase(save_repo, quest_repo, event_bus)
+        load_uc = LoadGameUseCase(save_repo, quest_repo, event_bus)
 
         # Start playing
         player = Player(id="player_01", name="Hero", current_room_id="room_01", health=70)
@@ -86,11 +88,12 @@ class TestSaveLoadEndToEnd:
         data_path = Path(__file__).parent.parent.parent / "data"
         content_repo = JsonContentRepository(data_path)
         save_repo = JsonSaveGameRepository(temp_save_dir)
+        quest_repo = InMemoryQuestRepository()
         event_bus = InMemoryEventBus()
 
         pick_up_uc = PickUpItemUseCase(content_repo, event_bus)
-        save_uc = SaveGameUseCase(save_repo, event_bus)
-        load_uc = LoadGameUseCase(save_repo, event_bus)
+        save_uc = SaveGameUseCase(save_repo, quest_repo, event_bus)
+        load_uc = LoadGameUseCase(save_repo, quest_repo, event_bus)
 
         # Start in room_01 and pick up the key
         player = Player(id="player_01", name="Hero", current_room_id="room_01")
@@ -115,11 +118,12 @@ class TestSaveLoadEndToEnd:
         data_path = Path(__file__).parent.parent.parent / "data"
         content_repo = JsonContentRepository(data_path)
         save_repo = JsonSaveGameRepository(temp_save_dir)
+        quest_repo = InMemoryQuestRepository()
         event_bus = InMemoryEventBus()
 
         move_uc = MoveToRoomUseCase(content_repo, event_bus)
-        save_uc = SaveGameUseCase(save_repo, event_bus)
-        load_uc = LoadGameUseCase(save_repo, event_bus)
+        save_uc = SaveGameUseCase(save_repo, quest_repo, event_bus)
+        load_uc = LoadGameUseCase(save_repo, quest_repo, event_bus)
 
         player = Player(id="player_01", name="Hero", current_room_id="room_01")
 

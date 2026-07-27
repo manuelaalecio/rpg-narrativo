@@ -1,6 +1,6 @@
 """Save game entity - serializable snapshot of player state."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 
@@ -21,6 +21,7 @@ class SaveGame:
     health: int
     max_health: int
     inventory: dict[str, int]  # item_id -> quantity
+    quest_statuses: dict[str, str] = field(default_factory=dict)  # quest_id -> status value
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization.
@@ -38,6 +39,7 @@ class SaveGame:
             "health": self.health,
             "max_health": self.max_health,
             "inventory": self.inventory,
+            "quest_statuses": self.quest_statuses,
         }
 
     @classmethod
@@ -57,4 +59,5 @@ class SaveGame:
             health=data["health"],
             max_health=data["max_health"],
             inventory=data["inventory"],
+            quest_statuses=data.get("quest_statuses", {}),
         )

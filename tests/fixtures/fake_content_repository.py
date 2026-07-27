@@ -2,6 +2,7 @@ from domain.entities.dialogue import Dialogue
 from domain.entities.item import Item
 from domain.entities.map import GameMap
 from domain.entities.npc import NPC
+from domain.entities.quest import Quest
 
 
 class FakeContentRepository:
@@ -13,11 +14,13 @@ class FakeContentRepository:
         items: dict[str, Item] | None = None,
         npcs: dict[str, NPC] | None = None,
         dialogues: dict[str, Dialogue] | None = None,
+        quests: dict[str, Quest] | None = None,
     ) -> None:
         self._game_map = game_map
         self._items = items or {}
         self._npcs = npcs or {}
         self._dialogues = dialogues or {}
+        self._quests = quests or {}
 
     def get_map(self) -> GameMap:
         return self._game_map
@@ -30,3 +33,9 @@ class FakeContentRepository:
 
     def get_dialogue(self, dialogue_id: str) -> Dialogue:
         return self._dialogues[dialogue_id]
+
+    def get_quest(self, quest_id: str) -> Quest:
+        return self._quests[quest_id]
+
+    def get_all_quests(self) -> dict[str, Quest]:
+        return self._quests

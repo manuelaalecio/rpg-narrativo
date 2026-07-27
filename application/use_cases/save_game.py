@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from application.ports.event_bus.event_bus_port import EventBusPort
+from application.ports.repositories.quest_repository_port import QuestRepositoryPort
 from application.ports.repositories.save_game_repository_port import (
     SaveGameRepositoryPort,
 )
@@ -18,9 +19,11 @@ class SaveGameUseCase:
     def __init__(
         self,
         save_repository: SaveGameRepositoryPort,
+        quest_repository: QuestRepositoryPort,
         event_bus: EventBusPort,
     ) -> None:
         self._save_repository = save_repository
+        self._quest_repository = quest_repository
         self._event_bus = event_bus
 
     def execute(self, player: Player, slot: str, save_name: str | None = None) -> UseCaseResult:
@@ -40,6 +43,13 @@ class SaveGameUseCase:
                 timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M")
                 save_name = f"{player.name} - {timestamp_str}"
 
+            # Collect quest statuses
+            quest_statuses = {}
+            for quest_id in self._quest_repository.get_active_quest_ids():
+                quest_statuses[quest_id] = self._quest_repository.get_quest_status(quest_id).value
+            for quest_id in self._quest_repository.get_completed_quest_ids():
+                quest_statuses[quest_id] = self._quest_repository.get_quest_status(quest_id).value
+
             # Build SaveGame from current player state
             save_game = SaveGame(
                 save_id=slot,
@@ -51,6 +61,7 @@ class SaveGameUseCase:
                 health=player.health,
                 max_health=player.max_health,
                 inventory=dict(player.inventory._items),  # Copy inventory
+                quest_statuses=quest_statuses,
             )
 
             # Persist the save

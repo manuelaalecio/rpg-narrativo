@@ -1,0 +1,35 @@
+"""In-memory implementation of QuestRepositoryPort for runtime use."""
+
+from application.ports.repositories.quest_repository_port import QuestRepositoryPort
+from domain.value_objects.quest_status import QuestStatus
+
+
+class InMemoryQuestRepository:
+    """In-memory quest repository for runtime use.
+
+    Quest statuses are stored in memory and lost when the application exits.
+    For persistence, quest statuses are saved/loaded via SaveGameUseCase/LoadGameUseCase.
+    """
+
+    def __init__(self) -> None:
+        self._statuses: dict[str, QuestStatus] = {}
+
+    def get_quest_status(self, quest_id: str) -> QuestStatus:
+        """Return the current status of a quest."""
+        return self._statuses.get(quest_id, QuestStatus.AVAILABLE)
+
+    def set_quest_status(self, quest_id: str, status: QuestStatus) -> None:
+        """Update the status of a quest."""
+        self._statuses[quest_id] = status
+
+    def get_completed_quest_ids(self) -> set[str]:
+        """Return the set of all completed quest ids."""
+        return {quest_id for quest_id, status in self._statuses.items() if status == QuestStatus.COMPLETED}
+
+    def get_active_quest_ids(self) -> set[str]:
+        """Return the set of all active quest ids."""
+        return {quest_id for quest_id, status in self._statuses.items() if status == QuestStatus.ACTIVE}
+
+
+# Type assertion: InMemoryQuestRepository satisfies QuestRepositoryPort
+_: QuestRepositoryPort = InMemoryQuestRepository()

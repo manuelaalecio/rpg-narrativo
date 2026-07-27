@@ -1,9 +1,6 @@
 """Fake save game repository for testing."""
 
-from datetime import datetime
-
 from application.ports.repositories.save_game_repository_port import (
-    SaveGameRepositoryPort,
     SaveMetadata,
 )
 from domain.entities.save_game import SaveGame

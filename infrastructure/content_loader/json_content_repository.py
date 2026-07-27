@@ -29,7 +29,7 @@ Usable items may include an "effect" field:
     "effect": {"effect_type": "heal", "value": 30}
 }
 
-item_type must be one of: "weapon", "consumable", "key", "misc"
+item_type must be one of: "weapon", "consumable", "key", "misc", "quest_item"
 effect_type must be one of: "heal"
 (must match enum values in domain/value_objects/)
 
@@ -70,7 +70,19 @@ Dialogue (data/dialogues/<dialogue_id>.json):
 }
 
 Conditions are structured data, never executable code.
-Supported condition_type values: "requires_item"
+Supported condition_type values: "requires_item", "requires_quest_completed"
+
+Quest (data/quests/<quest_id>.json):
+{
+    "id": "quest_m1",
+    "name": "The Hesitant Bell",
+    "description": "Investigate why the bell faltered.",
+    "npc_giver_id": "npc_doran",
+    "required_item_ids": [],
+    "required_quest_ids": [],
+    "reward_item_ids": ["item_guardian_lantern"],
+    "completion_dialogue_id": "dialogue_doran_m1_complete"
+}
 """
 
 import json
@@ -80,9 +92,11 @@ from domain.entities.dialogue import Condition, Dialogue, DialogueNode, Dialogue
 from domain.entities.item import Item
 from domain.entities.map import GameMap
 from domain.entities.npc import NPC
+from domain.entities.quest import Quest
 from domain.entities.room import Room
 from domain.value_objects.item_effect import EffectType, ItemEffect
 from domain.value_objects.item_type import ItemType
+from domain.value_objects.quest_status import QuestStatus
 from infrastructure.exceptions import ContentLoadError
 
 
@@ -100,14 +114,16 @@ class JsonContentRepository:
         self._items: dict[str, Item] = {}
         self._npcs: dict[str, NPC] = {}
         self._dialogues: dict[str, Dialogue] = {}
+        self._quests: dict[str, Quest] = {}
         self._load_all()
 
     def _load_all(self) -> None:
-        """Load all rooms, items, NPCs, and dialogues from JSON files into memory."""
+        """Load all rooms, items, NPCs, dialogues, and quests from JSON files into memory."""
         self._load_rooms()
         self._load_items()
         self._load_npcs()
         self._load_dialogues()
+        self._load_quests()
 
     def _load_rooms(self) -> None:
         rooms_dir = self._data_path / "rooms"
@@ -199,6 +215,14 @@ class JsonContentRepository:
         """Return the dialogue graph for the given id."""
         return self._dialogues[dialogue_id]
 
+    def get_quest(self, quest_id: str) -> Quest:
+        """Return the quest definition for the given id."""
+        return self._quests[quest_id]
+
+    def get_all_quests(self) -> dict[str, Quest]:
+        """Return all quests indexed by id."""
+        return self._quests
+
     def _load_npcs(self) -> None:
         npcs_dir = self._data_path / "npcs"
         if not npcs_dir.exists():
@@ -257,6 +281,33 @@ class JsonContentRepository:
                 id=data["id"],
                 start_node_id=data["start_node_id"],
                 nodes=nodes,
+            )
+        except KeyError as e:
+            raise ContentLoadError(str(file_path), f"Missing required field: {e}") from e
+
+    def _load_quests(self) -> None:
+        quests_dir = self._data_path / "quests"
+        if not quests_dir.exists():
+            return
+        for json_file in sorted(quests_dir.glob("*.json")):
+            if json_file.name == ".gitkeep":
+                continue
+            quest = self._parse_quest(json_file)
+            self._quests[quest.id] = quest
+
+    def _parse_quest(self, file_path: Path) -> Quest:
+        data = self._read_json(file_path)
+        try:
+            return Quest(
+                id=data["id"],
+                name=data["name"],
+                description=data["description"],
+                npc_giver_id=data["npc_giver_id"],
+                required_item_ids=data.get("required_item_ids", []),
+                required_quest_ids=data.get("required_quest_ids", []),
+                reward_item_ids=data.get("reward_item_ids", []),
+                completion_dialogue_id=data.get("completion_dialogue_id"),
+                status=QuestStatus.AVAILABLE,
             )
         except KeyError as e:
             raise ContentLoadError(str(file_path), f"Missing required field: {e}") from e

@@ -4,10 +4,11 @@ from domain.entities.dialogue import Dialogue
 from domain.entities.item import Item
 from domain.entities.map import GameMap
 from domain.entities.npc import NPC
+from domain.entities.quest import Quest
 
 
 class ContentRepositoryPort(Protocol):
-    """Contract for accessing game content (map, rooms, items, NPCs, dialogues)."""
+    """Contract for accessing game content (map, rooms, items, NPCs, dialogues, quests)."""
 
     def get_map(self) -> GameMap:
         """Return the complete game map with all rooms."""
@@ -23,4 +24,12 @@ class ContentRepositoryPort(Protocol):
 
     def get_dialogue(self, dialogue_id: str) -> Dialogue:
         """Return the dialogue graph for the given id."""
+        ...
+
+    def get_quest(self, quest_id: str) -> Quest:
+        """Return the quest definition for the given id."""
+        ...
+
+    def get_all_quests(self) -> dict[str, Quest]:
+        """Return all quests indexed by id."""
         ...

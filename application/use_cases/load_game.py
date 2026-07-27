@@ -1,6 +1,7 @@
 """Use case for loading a saved game."""
 
 from application.ports.event_bus.event_bus_port import EventBusPort
+from application.ports.repositories.quest_repository_port import QuestRepositoryPort
 from application.ports.repositories.save_game_repository_port import (
     SaveGameRepositoryPort,
 )
@@ -8,6 +9,7 @@ from application.use_cases.use_case_result import UseCaseResult
 from domain.entities.inventory import Inventory
 from domain.entities.player import Player
 from domain.events.game_loaded import GameLoaded
+from domain.value_objects.quest_status import QuestStatus
 from infrastructure.exceptions import SaveCorruptedError, SaveNotFoundError
 
 
@@ -17,9 +19,11 @@ class LoadGameUseCase:
     def __init__(
         self,
         save_repository: SaveGameRepositoryPort,
+        quest_repository: QuestRepositoryPort,
         event_bus: EventBusPort,
     ) -> None:
         self._save_repository = save_repository
+        self._quest_repository = quest_repository
         self._event_bus = event_bus
 
     def execute(self, slot: str) -> UseCaseResult:
@@ -49,6 +53,11 @@ class LoadGameUseCase:
                 health=save_game.health,
                 max_health=save_game.max_health,
             )
+
+            # Restore quest statuses
+            for quest_id, status_value in save_game.quest_statuses.items():
+                status = QuestStatus(status_value)
+                self._quest_repository.set_quest_status(quest_id, status)
 
             # Publish event
             event = GameLoaded(save_id=save_game.save_id, slot=slot)

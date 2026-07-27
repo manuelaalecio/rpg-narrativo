@@ -6,14 +6,16 @@ from application.use_cases.load_game import LoadGameUseCase
 from domain.entities.save_game import SaveGame
 from domain.events.game_loaded import GameLoaded
 from tests.fixtures.fake_event_bus import FakeEventBus
+from tests.fixtures.fake_quest_repository import FakeQuestRepository
 from tests.fixtures.fake_save_game_repository import FakeSaveGameRepository
 
 
 class TestLoadGameUseCase:
     def test_load_success(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = LoadGameUseCase(repo, event_bus)
+        use_case = LoadGameUseCase(repo, quest_repo, event_bus)
 
         # Create a save
         save = SaveGame(
@@ -51,8 +53,9 @@ class TestLoadGameUseCase:
 
     def test_load_nonexistent_slot(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = LoadGameUseCase(repo, event_bus)
+        use_case = LoadGameUseCase(repo, quest_repo, event_bus)
 
         result = use_case.execute("nonexistent")
 
@@ -61,8 +64,9 @@ class TestLoadGameUseCase:
 
     def test_load_corrupted_save(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = LoadGameUseCase(repo, event_bus)
+        use_case = LoadGameUseCase(repo, quest_repo, event_bus)
 
         # Create and mark as corrupted
         save = SaveGame(
@@ -86,8 +90,9 @@ class TestLoadGameUseCase:
 
     def test_load_empty_inventory(self) -> None:
         repo = FakeSaveGameRepository()
+        quest_repo = FakeQuestRepository()
         event_bus = FakeEventBus()
-        use_case = LoadGameUseCase(repo, event_bus)
+        use_case = LoadGameUseCase(repo, quest_repo, event_bus)
 
         save = SaveGame(
             save_id="slot_2",

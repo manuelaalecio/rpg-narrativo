@@ -8,3 +8,4 @@ class ItemType(Enum):
     CONSUMABLE = "consumable"
     KEY = "key"
     MISC = "misc"
+    QUEST_ITEM = "quest_item"
